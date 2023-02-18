@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SoCal JSA Sweepstakes Calculator</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    </head>
+    <body>
+        <p>JSA Sweepstakes Calculator</p>
+
+        <!--Add buttons to initiate auth sequence and sign out-->
+        <button id="authorizeButton" onclick="handleAuthClick()">Authorize</button>
+        <button id="signoutButton" onclick="handleSignoutClick()">Sign Out</button>
+        
+        <div style="display: flex;">
+            <label for="fileSelector" id="fileLabel" style="border-style: ridge; border-radius: 4px; padding: 2px; font-size: small;">Enter Point Breakdown</label>
+            <input type="file" id="fileSelector" accept=".csv" onchange="readFile(this)">
+        </div>
+
+        <div id="register">
+            <input type="text" id="registration" placeholder="Enter registration sheet">
+            <input type="button" id="registerBtn" value="Enter" onclick="makeDict()">
+        </div>
+        
+        <div id="debate">
+            <input type="text" id="formUrl" placeholder="Enter mod form url">
+            <!-- <input type="text" id="num_responses" placeholder="Enter # responses"> --> 
+            <input type="button" id="enter" value="Enter" onclick="calcForm()">
+        </div>
+
+        <div id="activism">
+            <input type="text" id="activismUrl" placeholder="Enter activism spreadsheet url">
+            <input type="button" id="enter" value="Enter" onclick="calcActive()">
+        </div>
+
+        <div id="chgPts">
+            <select id="miscSchool"></select>
+            <!-- <input type="button" id="chgEnter" value="Enter" onclick="changePts()"> --> 
+        </div>
+        
+        <!-- <input type="button" id="enter" value="Enter" onclick="calcForm()"> --> 
+        <div id="popupContain"></div> 
+        <pre id="content" style="white-space: pre-wrap;"></pre>
+
+        <script type="text/javascript" src="/public/script.js"></script>
+        <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+        <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    </body>
+</html>
