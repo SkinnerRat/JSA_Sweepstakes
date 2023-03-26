@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-    res.redirect("/public/page.html/"); 
+    res.render("/public/page.html/"); 
 })
 
 app.post("/public/page.html/", async (req, res) => {
