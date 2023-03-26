@@ -8,7 +8,7 @@ process.on('uncaughtException', function (error) {
 });
 
 // use the express-static middleware, getting static files from "public" folder
-app.use("/public", express.static("public"));
+app.use("/public", express.static(__dirname + "public"));
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 
