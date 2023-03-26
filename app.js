@@ -2,15 +2,19 @@ const express = require("express");
 const app = express();
 const puppeteer = require('puppeteer'); 
 const bodyParser = require('body-parser'); 
-const port = process.env.PORT || 8080; 
+const port = process.env.PORT || 3000; 
 process.on('uncaughtException', function (error) {
     console.log(error.stack);
 });
 
 // use the express-static middleware, getting static files from "public" folder
-app.use("/public", express.static("public"));
+app.use("/public", express.static(__dirname + "public"));
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+    res.render("/public/page.html/"); 
+})
 
 app.post("/public/page.html/", async (req, res) => {
     const content = await calc(decodeURIComponent(req.body.url), decodeURIComponent(req.body.isWinCon)); 
