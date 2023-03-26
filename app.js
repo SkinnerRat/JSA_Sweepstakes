@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const puppeteer = require('puppeteer'); 
 const bodyParser = require('body-parser'); 
-const port = process.env.PORT || 8080; 
+const port = process.env.PORT || 3000; 
 process.on('uncaughtException', function (error) {
     console.log(error.stack);
 });
