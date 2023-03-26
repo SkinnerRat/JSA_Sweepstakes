@@ -12,10 +12,6 @@ app.use("/public", express.static("public"));
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-    res.redirect("/public/page.html/"); 
-})
-
 app.post("/public/page.html/", async (req, res) => {
     const content = await calc(decodeURIComponent(req.body.url), decodeURIComponent(req.body.isWinCon)); 
     res.send(content); 
