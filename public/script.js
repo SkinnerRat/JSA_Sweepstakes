@@ -109,14 +109,14 @@ function handleSignoutClick() {
     }
 }
 
-const categories = {}, schools = {}, students = {}; 
+const categories = {}, schools = {}, students = {};
+let isWinCon = false; 
 
 // read point categories for sweepstakes from inputted file
 function readFile(input) {
     let file = input.files[0];
     document.getElementById("fileLabel").innerText = file.name; 
 
-    const catDrop = document.getElementById("miscCat"); 
     let fileReader = new FileReader(); 
     fileReader.readAsText(file); 
     fileReader.onload = function() {
@@ -243,17 +243,30 @@ function fillTable(str) {
 // also make dictionary linking students to schools (easy student-school lookup)
 async function makeDict() { 
     const reg = document.getElementById('registration').value; 
+    const rangeStr = document.getElementById('range').value; 
+    const convType = document.getElementById('convType').value; 
     if (!reg) {
         alert("Please enter the registration spreadsheet for this convention"); 
         return false; 
     }
+    if (!rangeStr || !rangeStr.includes(',')) {
+        alert("Please enter valid start and stop values, separated by a comma"); 
+        return false; 
+    }
+    if (!convType) {
+        alert("Please select a convention"); 
+        return false; 
+    }
+
+    let rangeVals = rangeStr.split(','); 
+    // forms for Winter Congress are slightly different 
+    if (convType === "wc") isWinCon = true; 
 
     let response;
     try {
         response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: reg.split('/')[5],
-            range: 'A12:D337', // range of chapters & names registered 
-            // TODO: make this user inputted
+            range: `A${rangeVals[0].trim()}:D${rangeVals[1].trim()}`, // range of chapters & names registered 
         });
     } catch (err) {
         alert("Invalid url"); 
@@ -265,8 +278,6 @@ async function makeDict() {
         document.getElementById('content').innerText = 'No values found.';
         return;
     }
-    // hiding "enter" button to lock in registration spreadsheet
-    document.getElementById('registerBtn').style.visibility = 'hidden'; 
 
     // making both dictionaries
     let schoolName; 
@@ -315,12 +326,12 @@ async function calcForm() {
     }
 
     document.getElementById('formUrl').value = null; 
-
+ 
     xhttp = new XMLHttpRequest(); 
     xhttp.onreadystatechange = writeOut; 
     xhttp.open('POST', 'http://localhost:3000/public/page.html/', async=true); 
     xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhttp.send(`url=${encodeURIComponent(url)}`);
+    xhttp.send(`url=${encodeURIComponent(url.trim())}&isWinCon=${encodeURIComponent(isWinCon)}`);
 }
 
 // handle data scraped from inputted google form
@@ -372,8 +383,6 @@ async function writeOut() {
             delete mods[bestMod]; 
         }
 
-        console.log("found mod"); 
-
         let bSpeaks = [], highest = 0, numVotes; 
         for (const name in speaks) {
             numVotes = parseInt(speaks[name]); 
@@ -410,7 +419,6 @@ async function writeOut() {
              
         }
 
-        console.log("found best speaker");
         const output = Object.entries(schools).sort(compareSchools).reduce(
             (str, row) => `${str}${row[0].padEnd(longestSchool)}, ${JSON.stringify(row[1])}\n`, ""); 
         fillTable(output); 
@@ -433,7 +441,9 @@ async function askSchool(name, categ) {
     console.log("logic finished"); 
     // resetting & removing modal
     document.getElementById('popupContain').style.visibility = 'hidden'; 
-    console.log("finsihed"); 
+    console.log("finished"); 
+
+    return true; 
 }
 
 // wait for user to click "confirm" on modal
@@ -441,10 +451,6 @@ async function waitClick() {
     return new Promise((resolve) => {
         this.document.getElementById('select_btn').addEventListener("click", () => {resolve(); });
     });
-}
-
-async function calcActive() {
-
 }
 
 async function changePts() {
@@ -466,343 +472,6 @@ async function changePts() {
     const output = Object.entries(schools).sort(compareSchools).reduce(
         (str, row) => `${str}${row[0].padEnd(longestSchool)}, ${JSON.stringify(row[1])}\n`, ""); 
     fillTable(output);
+
+    return true; 
 }
-
-
-/* 
-// update points from each new debate
-async function calcDebate() {
-    const formUrl = document.getElementById('formUrl').value; 
-    const numResponses = document.getElementById('num_responses').value;
-
-    if (!formUrl || !numResponses) {
-        alert("Spreadsheet url or # of responses missing, please enter all values");
-        return;  
-    }
-
-    // erasing entered values to prevent multiple entry
-    document.getElementById('formUrl').value = null; 
-    document.getElementById('num_responses').value = null; 
-    let response;
-    try {
-        response = await gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: formUrl.split('/')[5],
-            range: `D1:F${numResponses}`,
-        });
-    } catch (err) {
-        alert("Invalid url or Number of Responses.");
-        return;
-    }
-
-    const range = response.result;
-    if (!range || !range.values || range.values.length == 0) {
-        alert('No values found.');
-        return;
-    }
-
-
-    const mods = {}, bestSpeaker = {}
-    for (const row of range.values) {
-        let modName = row[0], vote = row[2]; // getting moderator name & best speaker vote
-        if (!(modName in mods)) mods[modName] = 0; 
-        mods[modName]++; 
-
-        if (!(vote in bestSpeaker)) bestSpeaker[vote] = 0; 
-        bestSpeaker[vote]++; 
-    }
-    
-    let found = false; 
-    while (!found) {
-        let bestMod = null, highest = 0; 
-        for (const modName in mods) { // find most likely moderator name
-            if (mods[modName] > highest) {
-                highest = mods[modName]; 
-                bestMod = modName; 
-            }
-        }
-
-        console.log(bestMod + " " + highest);
-        if (bestMod in students) {
-            schools[students[bestMod]]["moderating"]++; 
-            schools[students[bestMod]]["total"] += categories["moderating"]; 
-            found = true; 
-        }
-
-        delete mods[bestMod]; 
-    }
-
-    // finding best speaker(s)
-    let best = [], highest = 0; 
-    for (const speaker in bestSpeaker) {
-        let numVotes = bestSpeaker[speaker]; 
-        if (numVotes > highest) {
-            best = [speaker]; 
-            highest = numVotes; 
-        } else if (numVotes == highest) best.append(speaker); 
-    }
-
-    for (const name of best) {
-        let found = false; 
-        for (const school in schools) {
-            if (name.includes(school)) {
-                schools[school]["best speaker"] += 1; 
-                schools[school]["total"] += categories["best speaker"]; 
-                found = true; 
-                break; 
-            }
-        }
-
-        if (found) continue; 
-        const nameList = name.split(" "); 
-        for (let i = 1; i < nameList.length; i++) {
-            let combo = nameList.slice(i-1, i+1).join(' '); // getting different 2-word combinations until find valid name
-            if (combo in students) {
-                schools[students[combo]]["best speaker"] += 1; 
-                schools[students[combo]]["total"] += categories["best speaker"]; 
-                found = true; 
-                break; 
-            }
-        }
-        if (!found) await askSchool(name); 
-    }
-
-    const output = Object.entries(schools).sort(compareSchools).reduce(
-        (str, row) => `${str}${row[0].padEnd(longestSchool)}, ${JSON.stringify(row[1])}\n`, ""); 
-    fillTable(output); 
-}
-
-
-async function calcForm() {
-    const url = document.getElementById('formUrl').value; 
-    if (!url) {
-        alert("url missing"); 
-        return; 
-    }
-
-    document.getElementById('formUrl').value = null; 
-
-    setTimeout(calc, 3000); 
-
-    const output = Object.entries(schools).sort(compareSchools).reduce(
-        (str, row) => `${str}${row[0].padEnd(longestSchool)}, ${JSON.stringify(row[1])}\n`, ""); 
-    fillTable(output); 
-
-}
-*/
-
-/* 
-async function calc(url) {
-    const browser = await puppeteer.launch(); 
-    const page = await browser.newPage(); 
-    await page.goto(url); 
-
-    await page.waitForSelector(".s1H0X"); 
-    let data = await page.evaluate(() => {
-        const speakers = {}; 
-        let listContain = document.getElementsByClassName("s1H0X")[1]; // skip first list container as that is voting for sides
-        let names = listContain.getElementsByClassName("oD4MFb oNpSq-G9bxwf oDFlZb"); 
-        
-        for (let i = 0; i < names.length; i++) {
-            let name = names[i].getElementsByClassName("Hvn9fb zHQkBf")[0].value; 
-            name.replace(/-|(|)|,/g, ''); // get rid of punctuation marks
-            speakers.append(name); 
-        }
-
-        return speakers; 
-    });
-
-    await page.goto(url + "#responses"); // going to "responses" tab of Google form
-    await page.waitForSelector(".ThdJC.kaAt2.c0XF8e.KKjvXb.j7nIZb"); 
-    let resData = await page.evaluate(() => {
-        const mods = {}, best = {}; 
-
-        const modContain = document.getElementsByClassName("o5ddgd")[2]; 
-        const modList = modContain.getElementsByTagName("tbody")[0]; 
-        const modNames = modList.getElementsByTagName("tr");
-        for (const mod of modNames) {
-            let row = mod.innerText.split("	"); 
-            let modName = row[0], modCount = row[1]; 
-            if (!(modName in mods)) mods[modName] = 0; 
-            mods[modName] += modCount; 
-        }
-
-        const speakContain = document.getElementsByClassName("o5ddgd")[4]; 
-        const speakList = speakContain.getElementsByTagName("tbody")[0]; 
-        const speakNames = speakList.getElementsByTagName("tr");
-        for (const speaker of speakNames) {
-            let row = speaker.innerText.split("	"); 
-            let name = row[0], vote = row[1]; 
-            if (!(name in best)) best[name] = 0; 
-            best[name] += vote; 
-        }
-    
-        return [mods, best]; 
-    })
-
-    for (let i = 0; i < data.length; i++) {
-        let name = data[i]; 
-        let nameList = data[i].split(" "); 
-        for (let j = 1; j < nameList.length; j++) {
-            let combo = nameList.slice(j-1, j+1).join(' '); // getting different 2-word combinations until find valid name
-            if (combo in students) {
-                let category = "subsequent speaking"; 
-                if (i < 2 || name.toLowerCase().includes("main")) category = "main speaking"; 
-                schools[students[combo]][category] += 1; 
-                schools[students[combo]]["total"] += categories[category]; 
-                found = true; 
-                break; 
-            }
-        }
-        if (!found) await askSchool(name);
-    }
-
-    let found = false; 
-    while (!found) {
-        let bestMod = null, highest = 0; 
-        for (const modName in resData[0]) { // find most likely moderator name
-            if (resData[0][modName] > highest) {
-                highest = resData[0][modName]; 
-                bestMod = modName; 
-            }
-        }
-
-        if (bestMod in students) {
-            schools[students[bestMod]]["moderating"]++; 
-            schools[students[bestMod]]["total"] += categories["moderating"]; 
-            found = true; 
-        }
-
-        delete mods[bestMod]; 
-    }
-
-    for (const name of resData[1]) {
-        let found = false; 
-        for (const school in schools) {
-            if (name.includes(school)) {
-                schools[school]["best speaker"] += 1; 
-                schools[school]["total"] += categories["best speaker"]; 
-                found = true; 
-                break; 
-            }
-        }
-
-        if (found) continue; 
-        const nameList = name.split(" "); 
-        for (let i = 1; i < nameList.length; i++) {
-            let combo = nameList.slice(i-1, i+1).join(' '); // getting different 2-word combinations until find valid name
-            if (combo in students) {
-                schools[students[combo]]["best speaker"] += 1; 
-                schools[students[combo]]["total"] += categories["best speaker"]; 
-                found = true; 
-                break; 
-            }
-        }
-        if (!found) await askSchool(name); 
-    }
-
-}
-
-
-
-
-    /* 
-    // getting all speaker names from main form page
-    let listContain = document.getElementsByClassName("s1H0X")[1]; // skip first list container as that is voting for sides
-    let names = listContain.getElementsByClassName("oD4MFb oNpSq-G9bxwf oDFlZb"); 
-    for (let i = 0; i < names.length; i++) {
-        let name = names[i].getElementsByClassName("Hvn9fb zHQkBf")[0].value; 
-        name.replace(/-|(|)|,/g, ''); // get rid of punctuation marks
-
-        const nameList = name.split(" "); 
-        for (let j = 1; j < nameList.length; j++) {
-            let combo = nameList.slice(j-1, j+1).join(' '); // getting different 2-word combinations until find valid name
-            if (combo in students) {
-                let category = "subsequent speaking"; 
-                if (i < 2 || name.toLowerCase().includes("main")) category = "main speaking"; 
-                schools[students[combo]][category] += 1; 
-                schools[students[combo]]["total"] += categories[category]; 
-                found = true; 
-                break; 
-            }
-        }
-        if (!found) await askSchool(name);
-    }
-    
-
-    // clicking on "responses" tab for moderators / best speaker
-    document.getElementsByClassName("a6yTpb")[0].click();  
-    await document.getElementsByClassName("ThdJC kaAt2 c0XF8e KKjvXb j7nIZb"); 
-
-
-    // finding moderator
-    const modContain = document.getElementsByClassName("o5ddgd")[2]; 
-    const modList = modContain.getElementsByTagName("tbody")[0]; 
-    const modNames = modList.getElementsByTagName("tr");
-    const mods = {}; 
-    for (const mod of modNames) {
-        let row = mod.innerText.split("	"); 
-        let modName = row[0], modCount = row[1]; 
-        if (!(modName in mods)) mods[modName] = 0; 
-        mods[modName] += modCount; 
-    }
-    
-    let found = false; 
-    while (!found) {
-        let bestMod = null, highest = 0; 
-        for (const modName in mods) { // find most likely moderator name
-            if (mods[modName] > highest) {
-                highest = mods[modName]; 
-                bestMod = modName; 
-            }
-        }
-
-        if (bestMod in students) {
-            schools[students[bestMod]]["moderating"]++; 
-            schools[students[bestMod]]["total"] += categories["moderating"]; 
-            found = true; 
-        }
-
-        delete mods[bestMod]; 
-    }
-
-
-    const speakContain = document.getElementsByClassName("o5ddgd")[4]; 
-    const speakList = speakContain.getElementsByTagName("tbody")[0]; 
-    const speakNames = speakList.getElementsByTagName("tr");
-    const best = {}; 
-    for (const speaker of speakNames) {
-        let row = speaker.innerText.split("	"); 
-        let name = row[0], vote = row[1]; 
-        if (!(name in best)) best[name] = 0; 
-        best[name] += vote; 
-    }
-    
-    for (const name of best) {
-        let found = false; 
-        for (const school in schools) {
-            if (name.includes(school)) {
-                schools[school]["best speaker"] += 1; 
-                schools[school]["total"] += categories["best speaker"]; 
-                found = true; 
-                break; 
-            }
-        }
-
-        if (found) continue; 
-        const nameList = name.split(" "); 
-        for (let i = 1; i < nameList.length; i++) {
-            let combo = nameList.slice(i-1, i+1).join(' '); // getting different 2-word combinations until find valid name
-            if (combo in students) {
-                schools[students[combo]]["best speaker"] += 1; 
-                schools[students[combo]]["total"] += categories["best speaker"]; 
-                found = true; 
-                break; 
-            }
-        }
-        if (!found) await askSchool(name); 
-    }
-
-    window.close(); 
-    
-}
-*/

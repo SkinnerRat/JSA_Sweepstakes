@@ -3,18 +3,25 @@ const app = express();
 const puppeteer = require('puppeteer'); 
 const bodyParser = require('body-parser'); 
 const port = process.env.PORT || 3000; 
+process.on('uncaughtException', function (error) {
+    console.log(error.stack);
+});
 
 // use the express-static middleware, getting static files from "public" folder
 app.use("/public", express.static("public"));
 app.use(bodyParser.json()); 
-app.use(bodyParser.urlencoded({ extended: true })); 
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+    res.redirect("/public/page.html/"); 
+})
 
 app.post("/public/page.html/", async (req, res) => {
-    const content = await calc(decodeURIComponent(req.body.url)); 
+    const content = await calc(decodeURIComponent(req.body.url), decodeURIComponent(req.body.isWinCon)); 
     res.send(content); 
 }); 
 
-async function calc(url) {
+async function calc(url, isWinCon) {
     const browser = await puppeteer.launch({
         // headless: false, 
         userDataDir: "./user_data"
@@ -22,8 +29,8 @@ async function calc(url) {
     const page = await browser.newPage(); 
     await page.goto(url); 
 
-    // need to sign in (only when not signed in the browser before)
     /* 
+    // need to sign in (only when not signed in the browser before)
     const username = "jlee@socal.jsa.org"; 
     const password = "S@nsmain4"; 
 
@@ -37,14 +44,15 @@ async function calc(url) {
     await page.waitForSelector("div.Xb9hP input[type='password']"); // waiting for specific input inside certain class bc other input in prior page
     await page.type("div.Xb9hP input[type='password']", password);
     await page.click(nextBtnClass); 
+    await page.goto(url); // reload page to have editing access after signing in
     */
-
-    // reload page to have editing access after signing in
+    
+    let modifier = isWinCon === "true" ? 1 : 0; // convert boolean to int
     await page.waitForSelector(".s1H0X"); 
-    let data = await page.evaluate(() => {
+    let data = await page.evaluate((mod) => {
         const speakers = []; 
         // skip voting list containers to go to best speaker choice
-        let listContain = document.getElementsByClassName("s1H0X")[2]; // [2] for Winter Con, [1] for other
+        let listContain = document.getElementsByClassName("s1H0X")[1+mod]; // [2] for Winter Con, [1] for other
         let names = listContain.getElementsByClassName("oD4MFb oNpSq-G9bxwf oDFlZb"); 
         
         for (let i = 0; i < names.length; i++) {
@@ -53,14 +61,14 @@ async function calc(url) {
         }
 
         return speakers; 
-    });
+    }, modifier);
 
     // go to "responses" tab of Google form for moderator name & best speaker
     await page.goto(url + "#responses"); 
     await page.reload(); // for some reason need to reload in order to actually navigate
-    await page.waitForNetworkIdle(); 
+    await page.waitForNetworkIdle(); // wait for networkidle to fully load dom
     await page.waitForSelector(".o5ddgd"); 
-    let resData = await page.evaluate(() => {
+    let resData = await page.evaluate((mod) => {
         const mods = {}, best = {}; 
 
         const modContain = document.getElementsByClassName("o5ddgd")[2]; 
@@ -73,7 +81,7 @@ async function calc(url) {
             mods[modName] += modCount; 
         }
 
-        const speakContain = document.getElementsByClassName("o5ddgd")[5]; // go to best speaker; [5] for Winter Con, [4] for other 
+        const speakContain = document.getElementsByClassName("o5ddgd")[4+mod]; // go to best speaker; [5] for Winter Con, [4] for other 
         const speakList = speakContain.getElementsByTagName("tbody")[0]; 
         const speakNames = speakList.getElementsByTagName("tr");
         for (const speaker of speakNames) {
@@ -84,7 +92,7 @@ async function calc(url) {
         }
     
         return [mods, best]; 
-    }); 
+    }, modifier); 
 
     browser.close(); 
 
