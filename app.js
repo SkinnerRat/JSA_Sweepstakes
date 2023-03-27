@@ -8,12 +8,12 @@ process.on('uncaughtException', function (error) {
 });
 
 // use the express-static middleware, getting static files from "public" folder
-app.use("/public", express.static(__dirname + "public"));
+app.use("/public", express.static("public"));
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-    res.redirect("/public/page.html/"); 
+    res.redirect("/public/page.html"); 
 })
 
 app.post("/public/page.html/", async (req, res) => {
