@@ -23,29 +23,37 @@ app.post("/public/page.html/", async (req, res) => {
 
 async function calc(url, isWinCon) {
     const browser = await puppeteer.launch({
-        // headless: false, 
+        headless: false, 
         userDataDir: "./user_data"
     }); 
     const page = await browser.newPage(); 
     await page.goto(url); 
 
-    /* 
+    
     // need to sign in (only when not signed in the browser before)
-    const username = "jlee@socal.jsa.org"; 
-    const password = "S@nsmain4"; 
-
-    await page.waitForSelector(".U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.kHssdc.HvOprf.TFBnVe.M9Bg4d"); 
-    await page.click("div.XfpsVe.J9fJmf div.U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.kHssdc.HvOprf.TFBnVe.M9Bg4d"); 
-    await page.waitForSelector("#identifierId"); 
-    await page.type("#identifierId", username); 
-    let nextBtnClass = ".VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7.qIypjc.TrZEUc.lw1w4b"; 
-    await page.click(nextBtnClass);
     await page.waitForNetworkIdle(); 
-    await page.waitForSelector("div.Xb9hP input[type='password']"); // waiting for specific input inside certain class bc other input in prior page
-    await page.type("div.Xb9hP input[type='password']", password);
-    await page.click(nextBtnClass); 
-    await page.goto(url); // reload page to have editing access after signing in
-    */
+    if (await page.$("div[jsname='YASyvd']") !== null) {
+        await page.waitForSelector(".XfpsVe.J9fJmf");
+        const signin = await page.$("div.XfpsVe.J9fJmf span.RveJvd.snByac");
+        console.log(signin);
+        await signin.click();
+
+        const username = "jlee@socal.jsa.org"; 
+        const password = "S@nsmain4"; 
+
+        await page.waitForSelector(".U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.kHssdc.HvOprf.TFBnVe.M9Bg4d"); 
+        await page.click("div.XfpsVe.J9fJmf div.U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.kHssdc.HvOprf.TFBnVe.M9Bg4d"); 
+        await page.waitForSelector("#identifierId"); 
+        await page.type("#identifierId", username); 
+        let nextBtnClass = ".VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7.qIypjc.TrZEUc.lw1w4b"; 
+        await page.click(nextBtnClass);
+        await page.waitForNetworkIdle(); 
+        await page.waitForSelector("div.Xb9hP input[type='password']"); // waiting for specific input inside certain class bc other input in prior page
+        await page.type("div.Xb9hP input[type='password']", password);
+        await page.click(nextBtnClass); 
+        await page.goto(url); // reload page to have editing access after signing in
+    }
+    
     
     let modifier = isWinCon === "true" ? 1 : 0; // convert boolean to int
     await page.waitForSelector(".s1H0X"); 
