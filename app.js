@@ -54,7 +54,7 @@ async function calc(url, isWinCon) {
         await page.goto(url); // reload page to have editing access after signing in
     }
 
-    console.log(page.body)
+    console.log(page.getElementsByTagName('body').innerHTML)
 
     let modifier = isWinCon === "true" ? 1 : 0; // convert boolean to int
     await page.waitForSelector(".s1H0X"); 

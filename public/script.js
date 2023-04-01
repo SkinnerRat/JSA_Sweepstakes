@@ -24,7 +24,7 @@ document.getElementById('fileLabel').style.visibility = 'hidden';
 document.getElementById('signoutButton').style.visibility = 'hidden';
 document.getElementById('register').style.visibility = 'hidden'; 
 document.getElementById('debate').style.visibility = 'hidden'; 
-document.getElementById('activism').style.visibility = 'hidden'; 
+document.getElementById('expansion').style.visibility = 'hidden'; 
 document.getElementById('chgPts').style.visibility = 'hidden'; 
 document.getElementById('popupContain').style.visibility = 'hidden'; 
 
@@ -76,7 +76,7 @@ function handleAuthClick() {
         
         document.getElementById('register').style.visibility = 'visible'; 
         document.getElementById('debate').style.visibility = 'visible'; 
-        document.getElementById('activism').style.visibility = 'visible'; 
+        document.getElementById('expansion').style.visibility = 'visible'; 
         document.getElementById('chgPts').style.visibility = 'visible'; 
         document.getElementById('authorizeButton').innerText = 'Refresh';
     };
@@ -104,7 +104,7 @@ function handleSignoutClick() {
         
         document.getElementById('register').style.visibility = 'hidden'; 
         document.getElementById('debate').style.visibility = 'hidden'; 
-        document.getElementById('activism').style.visibility = 'hidden'; 
+        document.getElementById('expansion').style.visibility = 'hidden'; 
         document.getElementById('chgPts').style.visibility = 'hidden'; 
     }
 }
