@@ -25,7 +25,7 @@ document.getElementById('signoutButton').style.visibility = 'hidden';
 document.getElementById('register').style.visibility = 'hidden'; 
 document.getElementById('debate').style.visibility = 'hidden'; 
 document.getElementById('expansion').style.visibility = 'hidden'; 
-document.getElementById('chgPts').style.visibility = 'hidden'; 
+document.getElementById('manual').style.visibility = 'hidden'; 
 document.getElementById('popupContain').style.visibility = 'hidden'; 
 
 
@@ -77,7 +77,7 @@ function handleAuthClick() {
         document.getElementById('register').style.visibility = 'visible'; 
         document.getElementById('debate').style.visibility = 'visible'; 
         document.getElementById('expansion').style.visibility = 'visible'; 
-        document.getElementById('chgPts').style.visibility = 'visible'; 
+        document.getElementById('manual').style.visibility = 'visible'; 
         document.getElementById('authorizeButton').innerText = 'Refresh';
     };
 
@@ -105,7 +105,7 @@ function handleSignoutClick() {
         document.getElementById('register').style.visibility = 'hidden'; 
         document.getElementById('debate').style.visibility = 'hidden'; 
         document.getElementById('expansion').style.visibility = 'hidden'; 
-        document.getElementById('chgPts').style.visibility = 'hidden'; 
+        document.getElementById('manual').style.visibility = 'hidden'; 
     }
 }
 
@@ -128,14 +128,14 @@ function readFile(input) {
             addCat.type = "number"; 
             addCat.id = `mod ${res[i]}`; 
             addCat.placeholder = `# ${res[i]}`; 
-            document.getElementById("chgPts").appendChild(addCat); 
+            document.getElementById("manual").appendChild(addCat); 
         }
         const ent = document.createElement("input");
         ent.type = "button"; 
         ent.id = "chgEnter";
         ent.value = "Enter"; 
         ent.setAttribute("onclick", "changePts()"); 
-        document.getElementById("chgPts").appendChild(ent); 
+        document.getElementById("manual").appendChild(ent); 
     }; 
     fileReader.onerror = function() {
         alert(fileReader.error);
@@ -496,4 +496,39 @@ async function changePts() {
     return true; 
 }
 
+async function uploadScores() {
+    let file = input.files[0];
+    document.getElementById("fileLabel").innerText = file.name; 
+
+    try {
+        let fileReader = new FileReader(); 
+        fileReader.readAsText(file); 
+        fileReader.onload = function() {
+            res = fileReader.result.split(/,|\n/) 
+            for (let i = 0; i < res.length; i += categories.keys().length) {
+                for (let j = 1; j <= categories.keys().length; j++) {
+                    schools[res[i]][categories.keys()[j-1]] = parseInt(res[j])
+                }
+            }
+        }    
+    } catch (error) {
+        alert("Invalid csv file, please try again"); 
+    }   
+}
+
+async function download() {
+    const text = Object.entries(schools).reduce(
+        (str, row) => `${str}${row[0].padEnd(longestSchool)}, ${JSON.stringify(row[1])}\n`, ""); 
+
+    let element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', "sweepstakes.csv");
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
 
