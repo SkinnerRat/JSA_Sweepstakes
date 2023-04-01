@@ -24,10 +24,6 @@ app.post("/public/page.html/", async (req, res) => {
 async function calc(url, isWinCon) {
     const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox'], // needed to run chromium in browser
-<<<<<<< HEAD
-        headless: false, 
-=======
->>>>>>> parent of e07461c (headless testing)
         userDataDir: "./user_data"
     }); 
     const page = await browser.newPage(); 
@@ -58,7 +54,8 @@ async function calc(url, isWinCon) {
         await page.goto(url); // reload page to have editing access after signing in
     }
     
-    
+    await page.screenshot({path: "screenshot1.jpg" }); 
+
     let modifier = isWinCon === "true" ? 1 : 0; // convert boolean to int
     await page.waitForSelector(".s1H0X"); 
     let data = await page.evaluate((mod) => {
