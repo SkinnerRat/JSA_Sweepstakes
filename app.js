@@ -23,7 +23,7 @@ app.post("/public/page.html/", async (req, res) => {
 
 async function calc(url, isWinCon) {
     const browser = await puppeteer.launch({
-        headless: false, 
+        args: ['--no-sandbox', '--disable-setuid-sandbox'], // needed to run chromium in browser
         userDataDir: "./user_data"
     }); 
     const page = await browser.newPage(); 
