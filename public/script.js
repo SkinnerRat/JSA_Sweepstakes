@@ -329,7 +329,7 @@ async function calcForm() {
  
     xhttp = new XMLHttpRequest(); 
     xhttp.onreadystatechange = writeOut; 
-    xhttp.open('POST', 'http://localhost:3000/public/page.html/', async=true); 
+    xhttp.open('POST', 'https://nodejs-production-20c4.up.railway.app/public/page.html', async=true); 
     xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhttp.send(`url=${encodeURIComponent(url.trim())}&isWinCon=${encodeURIComponent(isWinCon)}`);
 }
