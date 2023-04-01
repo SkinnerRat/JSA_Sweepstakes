@@ -446,6 +446,26 @@ async function askSchool(name, categ) {
     return true; 
 }
 
+async function calcExpansion() {
+    const url = document.getElementById('expansionUrl').value; 
+    if (!url) {
+        alert("url missing"); 
+        return; 
+    }
+
+    let response;
+    try {
+        response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: reg.split('/')[5],
+            range: `A${rangeVals[0].trim()}:D${rangeVals[1].trim()}`,
+        });
+    } catch (err) {
+        alert("Invalid url"); 
+        document.getElementById('registration').value = null; 
+        return;
+    }    
+}
+
 // wait for user to click "confirm" on modal
 async function waitClick() {
     return new Promise((resolve) => {
@@ -475,3 +495,5 @@ async function changePts() {
 
     return true; 
 }
+
+
