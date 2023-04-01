@@ -39,7 +39,9 @@
             <input type="button" id="enter" value="Enter" onclick="calcExpansion()">
         </div>
 
-        <div id="chgPts">
+        <div id="manual">
+            <input type="file" id="uploadScores" accept=".csv" onchange="uploadScores(this)">
+            <button id="downloadScores" onclick="download()">Download Database</button>
             <select id="miscSchool"></select>
         </div>
         

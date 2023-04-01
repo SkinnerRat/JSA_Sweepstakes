@@ -77,7 +77,7 @@ function handleAuthClick() {
         
         document.getElementById('register').style.visibility = 'visible'; 
         document.getElementById('debate').style.visibility = 'visible'; 
-        document.getElementById('expansion').style.visibility = 'visible'; 
+        document.getElementById('expansion').style.visibility = 'visible';
         document.getElementById('chgPts').style.visibility = 'visible';  
         document.getElementById('files').style.visibility = 'visible';
         document.getElementById('authorizeButton').innerText = 'Refresh';
@@ -131,14 +131,14 @@ function readFile(input) {
             addCat.type = "number"; 
             addCat.id = `mod ${res[i]}`; 
             addCat.placeholder = `# ${res[i]}`; 
-            document.getElementById("chgPts").appendChild(addCat); 
+            document.getElementById("manual").appendChild(addCat); 
         }
         const ent = document.createElement("input");
         ent.type = "button"; 
         ent.id = "chgEnter";
         ent.value = "Enter"; 
         ent.setAttribute("onclick", "changePts()"); 
-        document.getElementById("chgPts").appendChild(ent); 
+        document.getElementById("manual").appendChild(ent); 
     }; 
     fileReader.onerror = function() {
         alert(fileReader.error);
