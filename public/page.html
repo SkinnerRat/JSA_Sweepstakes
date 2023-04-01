@@ -42,6 +42,12 @@
         <div id="chgPts">
             <select id="miscSchool"></select>
         </div>
+        
+        <div id="files" style="display: flex">
+            <label for="uploadScores" id="uploadLabel" style="font-size: small;">Enter scores: </label>
+            <input type="file" id="uploadScores" accept=".csv" onchange="uploadScores(this)">
+            <button id="downloadScores" onclick="download()">Download Database</button>
+        </div>
          
         <div id="popupContain"></div> 
         <pre id="content" style="white-space: pre-wrap;"></pre>

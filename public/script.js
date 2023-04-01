@@ -26,6 +26,7 @@ document.getElementById('register').style.visibility = 'hidden';
 document.getElementById('debate').style.visibility = 'hidden'; 
 document.getElementById('expansion').style.visibility = 'hidden'; 
 document.getElementById('chgPts').style.visibility = 'hidden'; 
+document.getElementById('files').style.visibility = 'hidden';
 document.getElementById('popupContain').style.visibility = 'hidden'; 
 
 
@@ -77,7 +78,8 @@ function handleAuthClick() {
         document.getElementById('register').style.visibility = 'visible'; 
         document.getElementById('debate').style.visibility = 'visible'; 
         document.getElementById('expansion').style.visibility = 'visible'; 
-        document.getElementById('chgPts').style.visibility = 'visible'; 
+        document.getElementById('chgPts').style.visibility = 'visible';  
+        document.getElementById('files').style.visibility = 'visible';
         document.getElementById('authorizeButton').innerText = 'Refresh';
     };
 
@@ -105,7 +107,8 @@ function handleSignoutClick() {
         document.getElementById('register').style.visibility = 'hidden'; 
         document.getElementById('debate').style.visibility = 'hidden'; 
         document.getElementById('expansion').style.visibility = 'hidden'; 
-        document.getElementById('chgPts').style.visibility = 'hidden'; 
+        document.getElementById('chgPts').style.visibility = 'hidden';  
+        document.getElementById('files').style.visibility = 'hidden';
     }
 }
 
@@ -219,10 +222,11 @@ function makeTable(dict) {
 
 // populate empty table with school names, in order
 function fillTable(str) {
+
+
     const strList = str.split("\n"); 
 
     for (let i = 0; i < Object.keys(schools).length+1; i++) {
-        let schoolName = ""; 
         for (let j = 0; j < Object.keys(Object.values(schools)[0]).length+1; j++) {
             // making visible dictionary for school points in html
             if (i == 0) { // making title row 
@@ -232,7 +236,6 @@ function fillTable(str) {
                 else document.getElementById(`Cell I0/J${j}`).innerText = catList[j-1]; 
             } else { // actually adding schools
                 const schoolList = strList[i-1].split(/,|:|}/); 
-                if (j == 0) schoolName = schoolList[j];  
                 document.getElementById(`Cell I${i}/J${j}`).innerText = schoolList[j*2]; 
             }    
         }
@@ -496,4 +499,46 @@ async function changePts() {
     return true; 
 }
 
+async function uploadScores(input) {
+    let file = input.files[0];
+
+    let fileReader = new FileReader(); 
+    fileReader.readAsText(file); 
+    fileReader.onload = function() {
+        res = fileReader.result.split(/,|\n/); 
+        const categList = Object.keys(categories); 
+        try {
+            for (let i = categList.length+1; i < res.length-1; i += categList.length+1) { // go to res.length-1 bc extra \n at end
+                for (let j = 1; j <= categList.length; j++) {
+                    schools[res[i]][categList[j-1]] += parseInt(res[i+j]);
+                    schools[res[i]]["total"] += categories[categList[j-1]]*parseInt(res[i+j]); 
+                }
+            }
+        } catch (error) {
+            alert(fileReader.error); 
+            return; 
+        }
+
+        const output = Object.entries(schools).sort(compareSchools).reduce(
+            (str, row) => `${str}${row[0].padEnd(longestSchool)}, ${JSON.stringify(row[1])}\n`, ""); 
+        fillTable(output);  
+    } 
+}
+
+async function download() {
+    const schData = Object.entries(schools).reduce(
+        (str, row) => `${str}${row[0]},${Object.values(row[1]).slice(0,Object.keys(categories).length).toString()}\n`, ""); 
+    const text = `school,${Object.keys(categories).toString()}\n${schData}`
+
+    let element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', "sweepstakes.csv");
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
 
