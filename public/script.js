@@ -131,14 +131,14 @@ function readFile(input) {
             addCat.type = "number"; 
             addCat.id = `mod ${res[i]}`; 
             addCat.placeholder = `# ${res[i]}`; 
-            document.getElementById("manual").appendChild(addCat); 
+            document.getElementById("chgPts").appendChild(addCat); 
         }
         const ent = document.createElement("input");
         ent.type = "button"; 
         ent.id = "chgEnter";
         ent.value = "Enter"; 
         ent.setAttribute("onclick", "changePts()"); 
-        document.getElementById("manual").appendChild(ent); 
+        document.getElementById("chgPts").appendChild(ent); 
     }; 
     fileReader.onerror = function() {
         alert(fileReader.error);
